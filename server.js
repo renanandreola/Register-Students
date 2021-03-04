@@ -13,7 +13,7 @@
 //  ' npm install mongoose '
 
 const express = require('express');
-const system = express();
+const app = express();
 const bodyParser = require('body-parser');
 const nunjucks = require('nunjucks');
 const restify = require('restify');
@@ -26,10 +26,10 @@ var port = process.env.PORT || 3000;
 
 let env = nunjucks.configure('views', {
     autoescape: true,
-    express: system
+    express: app
 });
 
-system.set('engine', env);
+app.set('engine', env);
 
 require('useful-nunjucks-filters')(env);
 
@@ -44,7 +44,7 @@ mongoose.connect(MONGODB_URL, {useNewUrlParser: true}, err => {
     console.info('Mongo connected');
 
 
-    system.listen(port, () => {
+    app.listen(port, () => {
       console.log('Escutando na porta ' + port);
     });
 
@@ -54,24 +54,24 @@ mongoose.connect(MONGODB_URL, {useNewUrlParser: true}, err => {
 //
 
 //NUNJUCKS
-system.use(bodyParser.json());       // to support JSON-encoded bodies
-system.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+app.use(bodyParser.json());       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 extended: true
 }));
 
-system.use(express.static('public'));
+app.use(express.static('public'));
 
 //
 
 //PÁGINAS
-system.get('/', (req, res) => {
+app.get('/', (req, res) => {
   res.render('index.html');
 });
 
 //
 
 //REQUISIÇÃO
-system.post('/form', (req, res) => {
+app.post('/form', (req, res) => {
   var student = new Students(req.body);
 
   if (student.password && student.password.length > 0) {
@@ -84,7 +84,7 @@ system.post('/form', (req, res) => {
   })
 });
 
-system.put('/form', (req, res) => {
+app.put('/form', (req, res) => {
   const data = req.body;
   if (data.password && data.password.length > 0) {
     data.password = md5(data.password);
@@ -95,13 +95,13 @@ system.put('/form', (req, res) => {
   });
 });
 
-system.get('/form', (req, res) => {
+app.get('/form', (req, res) => {
   Students.find((err, students) => {
        res.render('form.html', {students: students});
      });
  });
 
- system.delete('/form/:id', (req, res) => {
+ app.delete('/form/:id', (req, res) => {
   Students.findOneAndRemove({_id: req.params.id}, (err, obj) => {
     if(err) {
       res.send('error');
@@ -112,11 +112,11 @@ system.get('/form', (req, res) => {
 //
 
 //API
-system.get('/api/students', (req, res) => {
+app.get('/api/students', (req, res) => {
   res.send(listStudents);
 });
 
-system.get('/api/students/:id', (req, res) => {
+app.get('/api/students/:id', (req, res) => {
   Students.find({"_id": req.params.id }, (err, obj) => {
       if (err) {
         res.send(null);
